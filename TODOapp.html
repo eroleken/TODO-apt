@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body{
+            box-sizing: border-box;
+        }
+        .iButon{
+            cursor: pointer;
+            border: 3px solid #fff; 
+            border-radius: 15%;
+            
+        }
+        .iButon:active {
+            border-color:  rgb(91, 91, 112);
+        }
+
+        .sil{
+            width: 120px;
+            position: absolute;
+            top: 10;
+            right: 0;
+            display: none!important;
+            line-height: 1.5;
+        }
+        .fa-ellipsis-h{
+            position: relative;
+        }
+        /* .form-check-label{
+            text-decoration-line:line-through;
+        }
+         */
+         .buton{
+            text-decoration: none;
+            color:#000;
+         }
+         .active{
+            color:rgb(40, 150, 165)!important;
+         }
+         .filtre button{
+            background-color: #fff!important;
+            color: none!important;
+            border: none;
+            
+         }
+         
+
+    </style>
+</head>
+
+<body>
+    <div class="container shadow p-3">
+        TO DO App
+        <form action="" class="d-flex justify-content-between my-3">
+                <input type="text" type="number" id="gorevEkleInput" class="w-75 m-0" class="form-check-input" >
+                <!-- <label for="gorevEkle">Görev ekleyin</label> -->
+                <button class="btn btn-danger" id="gorevEkleButonu" type="button" onclick="gorevEkleFunc()" style="text-decoration-line:line-through">Görev Ekle</button>
+                <button class="btn btn-danger" onclick=deleteAll() id="gorevSilButonu" type="button">Görevleri Sil</button>
+           
+        </form>
+    </div>
+    
+  
+    <div class="container my-3 mx-auto">
+        <div class="row">
+            <div class="card">
+                <div class="pt-2">
+                    <div class="filtre d-flex-row">
+                        <button  id="hepsiId" onclick=hepsi() type="button" >Hepsi</button>
+                        <button  id="yapilacakId" onclick=yapilacaklar() type="button" >Yapılacaklar</button>
+                        <button  id="tamamId" onclick=tamamlananlar() type="button" >Tamamlananlar</button>
+                    </div>
+                    
+                </div>
+                <div class="card-body" id="task-list">
+                    <ul class="list-group">
+                       
+                        <!-- <li class="task list-group-item">
+                            <div class="form-check">
+                                <input type="checkbox" id="1" class="form-check-input">
+                                <label for="1" class="form-check-label">Görev 1</label>
+                            </div>
+                        </li> -->                        
+                    </ul>
+                    <!-- Modal -->
+                    <div class="modal fade" id="exampleModal" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                            <input type="text" id="degisimInput"  placeholder="Değişiklikleri yazınız..." autofocus > 
+                            <!-- onkeydown=inputKaydetEventkeydown() -->
+                            </div>
+                            <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                            <button type="button" id="inputKaydet" onclick=inputKaydetEvent() class="btn btn-primary" data-bs-dismiss="modal">Kaydet</button>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+  
+                    <p id="paragraf"></p>
+                    <br><br><br>
+                    <button id="btn">click me</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"> </script>
+
+    <script>
+        // ------------------------------------------------------------------------------------------
+        //Tanımlar
+            //Buton-tanım
+          
+
+            //Input-tanım
+        let gorevEkleInput=document.querySelector("#gorevEkleInput");
+        
+            //Sair-tanım
+        let secilenler=[];
+        let silinen=0;  
+        var uzunluk;
+        var ul=document.getElementById("task-list").children[0];
+        var liste=[];
+        
+        //Local Storage dolu mu, boş mu kontrolü??
+        if(localStorage.getItem("liste")!=null){
+            liste=JSON.parse(window.localStorage.getItem('liste'));
+          
+        }
+        else{
+            liste=[
+            {"id":1, "gorev":"Görev_1", "durum":"tamamlandı"},
+            {"id":2, "gorev":"Görev_2","durum":"beklemede"},
+            {"id":3, "gorev":"Görev_3","durum":"beklemede"}
+        ];
+        }
+
+       
+        let degisimInput=document.getElementById("degisimInput"); //silinebilir
+        //let silIndisi=[];
+        //let duzenleIndis;
+        let exampleModal=document.getElementById("exampleModal");
+        let lengh;
+        
+        let completed;
+        let processing;
+        completed=liste.filter(x => x.durum=="tamamlandı");
+        processing=liste.filter(x => x.durum=="beklemede");
+        let sonBasılan="hepsi";
+        show(liste);
+        document.getElementById("hepsiId").classList.add("active");
+        
+        // function inputKaydetEventkeydown(event)
+        //     {
+        //         if(event.key=="Enter")            
+        //         {
+        //             onkeydown=inputKaydetEvent();        
+        //         }
+        //         else{
+        //             return;
+        //         }
+        //         event.preventDefault();            
+        //     }
+            
+        function show(listem){
+            ul.innerHTML="";
+            for(let i in listem){
+              // let tamam=listem[i].durum =="tamamlandı"? "checked":"";
+
+                if(listem[i].durum =="tamamlandı"){
+                    tamam="checked";
+                }
+                else{
+                    tamam="";
+                }
+
+                let li=    `<li class="task list-group-item d-flex justify-content-between py-2">
+                                <div class="form-check">
+                                    <input type="checkbox" id=${listem[i].id} onchange="checkLen(this,${listem[i].id})" class="form-check-input ${tamam}" >
+                                    <label for=${listem[i].id} class="form-check-label" >${listem[i].gorev}</label>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="fa fa-ellipsis-h iButon p-1 bg-white " type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                      
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><button type="button" class="dropdown-item fa fa-trash me-auto m-1 pt-1"  id="sil_${listem[i].id}"  onclick=silyazdir(${listem[i].id}) href="#">  Sil</button></li>
+                                        
+                                        <li><button type="button" id="duzenle_${listem[i].id}"  class="dropdown-item fa fa-pencil me-auto m-1 border-success border-opacity-25 pt-1 border-top" onclick=inputEvent(${listem[i].id}) href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">  Düzenle</button></li>
+                                    </ul>
+                                </div>
+                            </li>`
+                        //   console.log(listem[i].gorev);
+                    ul.insertAdjacentHTML("beforeend",li);
+            }
+                   
+            // duzenleIndis=document.querySelectorAll('button[id*="duzenle"]').forEach(occurence => occurence.addEventListener("click",inputEvent));
+
+            addEventListener("input",checkBox_sec);  
+
+            
+            exampleModal.addEventListener('shown.bs.modal', () => {
+                degisimInput.focus();
+                })
+                for(i of document.querySelectorAll(".checked")){
+                    i.checked=true;
+                    i.nextElementSibling.style="text-decoration-line:line-through";
+                } 
+        
+        }
+//Navigation-Bar Fonksiyonları     
+        function yapilacaklar(){
+            activeSil();
+            sonBasılan="yapilacaklar";            
+            document.getElementById("yapilacakId").classList.add("active");
+
+            if(processing.length==0){
+                ul.innerHTML="Yapılacak görev kalmamıştır...";}
+            
+            else
+            {
+                show(processing);
+            }            
+        }
+
+        function hepsi(){
+            activeSil();
+            sonBasılan="hepsi";            
+            document.getElementById("hepsiId").classList.add("active");
+            if(liste.length==0){
+                ul.innerHTML="Görev kalmamıştır (tümü)...";}
+            
+            else
+            {
+                show(liste);
+            }   
+           
+        }
+
+        function tamamlananlar(){
+            activeSil();
+            sonBasılan="tamamlananlar";
+            document.getElementById("tamamId").classList.add("active");
+
+            if(completed.length==0){
+                ul.innerHTML="Tamamlanan görev kalmamıştır...";}
+            
+            else
+            {
+                show(completed);
+            }
+            // for(i of document.querySelectorAll(".form-check-input")){
+            //     i.checked=true;
+            //     i.nextElementSibling.style="text-decoration-line:line-through";
+            // }
+            }
+        
+
+            
+        function LenghCompletedProcessing(){
+            lengh=liste.length; //otomat
+            completed=liste.filter(x => x.durum=="tamamlandı");
+            processing=liste.filter(x => x.durum=="beklemede");
+        }
+
+        function sonBasilanGoster(){
+            if(sonBasılan=="yapilacaklar"){
+                    yapilacaklar();
+                }
+
+                else if(sonBasılan=="tamamlananlar"){
+                    tamamlananlar();
+                }
+                else{
+                    hepsi();
+                }
+        }
+
+        function checkLen(eleman,i){
+            if(eleman.checked==true)
+            {
+                eleman.nextElementSibling.style="text-decoration-line:line-through";
+                for(x of liste){
+                    if(x.id==i)
+                    {
+                        x.durum="tamamlandı";                    
+                    }
+                }
+            }
+            else           
+            {
+                eleman.nextElementSibling.style="text-decoration-line:none";
+                for(x of liste){
+                    if(x.id==i)
+                    {
+                        x.durum="beklemede";
+                    }
+                }
+            } 
+
+            LenghCompletedProcessing(); 
+            sonBasilanGoster();
+            localStorage.setItem(key="liste", JSON.stringify(liste));
+        }
+
+        let d;
+//KAYDETME FONKSİYONLARI    
+        function inputEvent(eleman){
+            // 1. çözüm
+
+        //     d=(e.target.parentElement.parentElement.parentElement.parentElement.children[0].children[1]);
+        //    degisimInput.value=d.innerHTML;
+        //    degisActive=e.target;
+        //    degisActive.classList.add('active');
+            d=liste.filter(x => x.id==eleman)[0];
+            // 2. Çözüm
+           // degisimInput.value=liste.filter(x => x.id==eleman)[0].gorev;
+
+            // 3. Çözüm
+            degisimInput.value=d.gorev;
+           // degisActive=e.target;
+           // degisActive.classList.add('active');
+
+        //    TODO: Yukarıdakileri [0] ile tanımlamamızın nedeni zannedersem şu: filter fonksiyonu bana 
+        // sonucları ayrı bir listenin içine alıpta getiriyor durum böyle olunca benim aradığım gelen listenin [0] ıncı elemanı oluyor.
+           // degisimInput.value=eleman;
+          //  console.log(eleman);
+          localStorage.setItem(key="liste", JSON.stringify(liste));
+
+        }
+        
+        function inputKaydetEvent(){
+            // eleman=degisimInput.value;
+            // liste[Number(d.getAttribute('for'))-1].gorev=degisimInput.value;
+            // degisActive.classList.remove('active');
+
+            d.gorev=degisimInput.value;
+            localStorage.setItem(key="liste", JSON.stringify(liste));
+
+            show(liste);
+        }
+        
+        function gorevEkleFunc()
+        {
+                liste.push({"id":liste.length+1, "gorev":gorevEkleInput.value, "durum":"beklemede"});   
+                gorevEkleInput.value="";
+
+                LenghCompletedProcessing();  
+                show(liste); 
+                hepsi();
+                localStorage.setItem(key="liste", JSON.stringify(liste));
+
+        }
+
+        gorevEkleInput.addEventListener("keydown", function(event) {
+           if(event.key=="Enter"){
+            onkeypress=gorevEkleFunc(); 
+           // processing=liste.filter(x => x.durum=="beklemede");
+           }
+           else{
+            return;
+           }
+           event.preventDefault();    
+        });
+        
+        function checkBox_sec(){
+            secilenler = document.querySelectorAll(".list-group input[id]:checked");
+        }
+         
+
+//SİLME FONKSİYONLARI
+        function deleteAll()
+        {
+           liste=[];
+           show(liste);
+           lengh=0;
+           LenghCompletedProcessing();  
+           sonBasilanGoster();
+           localStorage.setItem(key="liste", JSON.stringify(liste));
+
+        }
+        function silyazdir(e) 
+                   {  
+                   // liste=liste.filter(e => liste.every(y => !y.id.includes(e)));
+                   // liste.splice(e,1);
+                   liste=liste.filter(x => !x.id.toString().includes(e));
+                    LenghCompletedProcessing(); 
+                    sonBasilanGoster();
+                    localStorage.setItem(key="liste", JSON.stringify(liste));
+                };
+        function activeSil(){
+            sonBasılan=[];
+                for (i of document.querySelectorAll(".filtre button")){
+                    i.classList.remove("active");
+                }               
+        }
+        // function CheckSil()
+        // {      
+        //     let yeniList=[];
+        //     secilenler=Array.from(secilenler);
+        //     // TODO: Nodelist i arraye çevirdik
+        //     yeniList=liste.filter(x => secilenler.every(y => !y.id.includes(x.id.toString())));
+        //     liste=yeniList;
+
+        //     LenghCompletedProcessing(); 
+
+        //     show(liste);
+        //     localStorage.setItem(key="liste", JSON.stringify(liste));
+
+        // } 
+            
+    </script>
+
+</body>
+</html>
